@@ -1,0 +1,534 @@
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+enum UserRole {
+  ADMIN
+  STUDENT
+}
+
+enum ExamStatus {
+  DRAFT
+  APPROVED
+  SCHEDULED
+  ACTIVE
+  COMPLETED
+  ARCHIVED
+}
+
+enum QuestionType {
+  MCQ
+  MULTIPLE_SELECT
+  TRUE_FALSE
+  PROGRAMMING
+}
+
+enum Difficulty {
+  EASY
+  MEDIUM
+  HARD
+}
+
+enum AttemptStatus {
+  IN_PROGRESS
+  SUBMITTED
+  TIMED_OUT
+  ABANDONED
+}
+
+enum SubmissionStatus {
+  PENDING
+  ACCEPTED
+  WRONG_ANSWER
+  TIME_LIMIT_EXCEEDED
+  MEMORY_LIMIT_EXCEEDED
+  COMPILATION_ERROR
+  RUNTIME_ERROR
+}
+
+// 1. User
+model User {
+  id               String                    @id @default(uuid())
+  email            String                    @unique
+  password         String
+  role             UserRole                  @default(STUDENT)
+  firstName        String
+  lastName         String
+  avatarUrl        String?
+  isActive         Boolean                   @default(true)
+  createdAt        DateTime                  @default(now())
+  updatedAt        DateTime                  @updatedAt
+
+  studentProfile   StudentProfile?
+  adminProfile     AdminProfile?
+  createdExams     Exam[]                    @relation("ExamCreator")
+  examAttempts     ExamAttempt[]
+  results          Result[]
+  mockTests        MockTest[]
+  mockTestAttempts MockTestAttempt[]
+  codeSubmissions  CodeSubmission[]
+  leaderboardRows  LeaderboardEntry[]
+  chatConversations ChatConversation[]
+  notifications    Notification[]
+  exposures        QuestionExposureHistory[]
+
+  @@index([email])
+  @@index([role])
+}
+
+// 2. StudentProfile
+model StudentProfile {
+  id           String   @id @default(uuid())
+  userId       String   @unique
+  rollNumber   String?  @unique
+  institution  String
+  yearOfStudy  String
+  streamId     String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  stream       Stream?  @relation(fields: [streamId], references: [id], onDelete: SetNull)
+
+  @@index([streamId])
+}
+
+// 3. AdminProfile
+model AdminProfile {
+  id          String   @id @default(uuid())
+  userId      String   @unique
+  department  String?
+  title       String?
+  institution String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+// 4. Stream (Academic Category)
+model Stream {
+  id          String           @id @default(uuid())
+  name        String           @unique
+  code        String           @unique
+  description String?          @db.Text
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+
+  subjects    Subject[]
+  students    StudentProfile[]
+  exams       Exam[]
+  questions   Question[]
+  leaderboard LeaderboardEntry[]
+
+  @@index([code])
+}
+
+// 5. Subject
+model Subject {
+  id          String             @id @default(uuid())
+  name        String
+  code        String
+  streamId    String
+  description String?            @db.Text
+  createdAt   DateTime           @default(now())
+  updatedAt   DateTime           @updatedAt
+
+  stream      Stream             @relation(fields: [streamId], references: [id], onDelete: Cascade)
+  units       Unit[]
+  questions   Question[]
+  exams       Exam[]
+  leaderboard LeaderboardEntry[]
+
+  @@unique([code, streamId])
+  @@index([streamId])
+}
+
+// 6. Unit
+model Unit {
+  id          String   @id @default(uuid())
+  unitNumber  Int
+  name        String
+  subjectId   String
+  description String?  @db.Text
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  subject     Subject  @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+  topics      Topic[]
+
+  @@unique([unitNumber, subjectId])
+  @@index([subjectId])
+}
+
+// 7. Topic
+model Topic {
+  id          String     @id @default(uuid())
+  name        String
+  unitId      String
+  description String?    @db.Text
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+
+  unit        Unit       @relation(fields: [unitId], references: [id], onDelete: Cascade)
+  questions   Question[]
+
+  @@index([unitId])
+}
+
+// 8. Question
+model Question {
+  id                 String                    @id @default(uuid())
+  text               String                    @db.Text
+  type               QuestionType              @default(MCQ)
+  difficulty         Difficulty                @default(MEDIUM)
+  defaultMarks       Float                     @default(2.0)
+  negativeMarks      Float                     @default(0.0)
+  explanation        String?                   @db.Text
+  contentHash        String                    @unique
+  normalizedText     String                    @db.Text
+  isApproved         Boolean                   @default(false)
+  isAiGenerated      Boolean                   @default(false)
+  timesUsed          Int                       @default(0)
+  streamId           String?
+  subjectId          String?
+  topicId            String?
+  codeProblemDetails Json?
+  createdAt          DateTime                  @default(now())
+  updatedAt          DateTime                  @updatedAt
+
+  stream             Stream?                   @relation(fields: [streamId], references: [id], onDelete: SetNull)
+  subject            Subject?                  @relation(fields: [subjectId], references: [id], onDelete: SetNull)
+  topic              Topic?                    @relation(fields: [topicId], references: [id], onDelete: SetNull)
+  options            QuestionOption[]
+  examQuestions      ExamQuestion[]
+  studentAnswers     StudentAnswer[]
+  codeSubmissions    CodeSubmission[]
+  exposureHistory    QuestionExposureHistory[]
+
+  @@index([streamId])
+  @@index([subjectId])
+  @@index([topicId])
+  @@index([difficulty])
+  @@index([type])
+  @@index([isApproved])
+}
+
+// 9. QuestionOption
+model QuestionOption {
+  id         String   @id @default(uuid())
+  questionId String
+  optionKey  String
+  text       String   @db.Text
+  isCorrect  Boolean  @default(false)
+  sortOrder  Int      @default(0)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  question   Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
+
+  @@index([questionId])
+}
+
+// 10. Exam
+model Exam {
+  id               String             @id @default(uuid())
+  title            String
+  description      String?            @db.Text
+  streamId         String
+  subjectId        String
+  topicName        String?
+  durationMinutes  Int                @default(45)
+  totalMarks       Float              @default(50.0)
+  passMarks        Float              @default(20.0)
+  negativeMarking  Boolean            @default(false)
+  negativeMarks    Float              @default(0.0)
+  difficulty       Difficulty         @default(MEDIUM)
+  questionType     String             @default("MIXED")
+  status           ExamStatus         @default(DRAFT)
+  startDate        DateTime?
+  endDate          DateTime?
+  maxAttempts      Int                @default(1)
+  shuffleQuestions Boolean            @default(true)
+  shuffleOptions   Boolean            @default(true)
+  createdById      String?
+  createdAt        DateTime           @default(now())
+  updatedAt        DateTime           @updatedAt
+
+  stream           Stream             @relation(fields: [streamId], references: [id], onDelete: Cascade)
+  subject          Subject            @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+  createdBy        User?              @relation("ExamCreator", fields: [createdById], references: [id], onDelete: SetNull)
+  examQuestions    ExamQuestion[]
+  attempts         ExamAttempt[]
+  results          Result[]
+  leaderboard      LeaderboardEntry[]
+
+  @@index([streamId])
+  @@index([subjectId])
+  @@index([status])
+  @@index([startDate, endDate])
+}
+
+// 11. ExamQuestion
+model ExamQuestion {
+  id            String   @id @default(uuid())
+  examId        String
+  questionId    String
+  orderNumber   Int      @default(1)
+  marks         Float    @default(2.0)
+  negativeMarks Float    @default(0.0)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  exam          Exam     @relation(fields: [examId], references: [id], onDelete: Cascade)
+  question      Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
+
+  @@unique([examId, questionId])
+  @@index([examId])
+  @@index([questionId])
+}
+
+// 12. ExamAttempt
+model ExamAttempt {
+  id                    String          @id @default(uuid())
+  examId                String
+  userId                String
+  attemptNumber         Int             @default(1)
+  status                AttemptStatus   @default(IN_PROGRESS)
+  startedAt             DateTime        @default(now())
+  expiresAt             DateTime
+  submittedAt           DateTime?
+  shuffledQuestionsOrder Json?
+  createdAt             DateTime        @default(now())
+  updatedAt             DateTime        @updatedAt
+
+  exam                  Exam            @relation(fields: [examId], references: [id], onDelete: Cascade)
+  user                  User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  answers               StudentAnswer[]
+  result                Result?
+
+  @@unique([examId, userId, attemptNumber])
+  @@index([examId])
+  @@index([userId])
+  @@index([status])
+}
+
+// 13. StudentAnswer
+model StudentAnswer {
+  id                String      @id @default(uuid())
+  attemptId         String
+  questionId        String
+  selectedOptionIds Json?
+  textResponse      String?     @db.Text
+  codeResponse      String?     @db.Text
+  codeLanguage      String?
+  isMarkedForReview Boolean     @default(false)
+  isAnswered        Boolean     @default(false)
+  isCorrect         Boolean?    @default(false)
+  marksAwarded      Float       @default(0.0)
+  savedAt           DateTime    @default(now())
+  updatedAt         DateTime    @updatedAt
+
+  attempt           ExamAttempt @relation(fields: [attemptId], references: [id], onDelete: Cascade)
+  question          Question    @relation(fields: [questionId], references: [id], onDelete: Cascade)
+
+  @@unique([attemptId, questionId])
+  @@index([attemptId])
+  @@index([questionId])
+}
+
+// 14. Result
+model Result {
+  id                String      @id @default(uuid())
+  attemptId         String      @unique
+  examId            String
+  userId            String
+  totalQuestions    Int
+  correctAnswers    Int         @default(0)
+  incorrectAnswers  Int         @default(0)
+  unansweredCount   Int         @default(0)
+  totalMarks        Float
+  obtainedMarks     Float
+  percentage        Float
+  isPassed          Boolean     @default(false)
+  timeTakenSeconds  Int         @default(0)
+  topicAccuracy     Json?
+  aiAnalysis        Json?
+  createdAt         DateTime    @default(now())
+  updatedAt         DateTime    @updatedAt
+
+  attempt           ExamAttempt @relation(fields: [attemptId], references: [id], onDelete: Cascade)
+  exam              Exam        @relation(fields: [examId], references: [id], onDelete: Cascade)
+  user              User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([examId])
+  @@index([userId])
+  @@index([percentage])
+}
+
+// 15. MockTest
+model MockTest {
+  id              String            @id @default(uuid())
+  userId          String
+  title           String
+  streamId        String?
+  subjectId       String?
+  topicName       String?
+  difficulty      Difficulty        @default(MEDIUM)
+  questionType    String            @default("MCQ")
+  durationMinutes Int               @default(20)
+  totalQuestions  Int               @default(10)
+  questionsData   Json
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+
+  user            User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  attempts        MockTestAttempt[]
+
+  @@index([userId])
+}
+
+// 16. MockTestAttempt
+model MockTestAttempt {
+  id           String    @id @default(uuid())
+  mockTestId   String
+  userId       String
+  startedAt    DateTime  @default(now())
+  submittedAt  DateTime?
+  score        Float     @default(0.0)
+  maxMarks     Float     @default(0.0)
+  percentage   Float     @default(0.0)
+  answersData  Json
+  resultData   Json?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  mockTest     MockTest  @relation(fields: [mockTestId], references: [id], onDelete: Cascade)
+  user         User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([mockTestId])
+  @@index([userId])
+}
+
+// 17. CodeSubmission
+model CodeSubmission {
+  id               String           @id @default(uuid())
+  userId           String
+  questionId       String?
+  language         String
+  sourceCode       String           @db.Text
+  status           SubmissionStatus @default(PENDING)
+  executionTime    Float?
+  memoryUsed       Float?
+  stdout           String?          @db.Text
+  stderr           String?          @db.Text
+  compileOutput    String?          @db.Text
+  testCasesPassed  Int              @default(0)
+  totalTestCases   Int              @default(0)
+  judge0Token      String?
+  createdAt        DateTime         @default(now())
+  updatedAt        DateTime         @updatedAt
+
+  user             User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  question         Question?        @relation(fields: [questionId], references: [id], onDelete: SetNull)
+
+  @@index([userId])
+  @@index([questionId])
+  @@index([status])
+}
+
+// 18. LeaderboardEntry
+model LeaderboardEntry {
+  id                String    @id @default(uuid())
+  userId            String
+  streamId          String?
+  subjectId         String?
+  examId            String?
+  rank              Int
+  totalScore        Float
+  examsCount        Int       @default(1)
+  avgPercentage     Float
+  honorTier         String    @default("Bronze Scholar")
+  lastCalculatedAt  DateTime  @default(now())
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  user              User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  stream            Stream?   @relation(fields: [streamId], references: [id], onDelete: Cascade)
+  subject           Subject?  @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+  exam              Exam?     @relation(fields: [examId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, streamId, subjectId, examId])
+  @@index([streamId])
+  @@index([subjectId])
+  @@index([examId])
+  @@index([rank])
+  @@index([avgPercentage])
+}
+
+// 19. ChatConversation
+model ChatConversation {
+  id        String        @id @default(uuid())
+  userId    String
+  title     String        @default("Academic Inquiry")
+  language  String        @default("en")
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+
+  user      User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  messages  ChatMessage[]
+
+  @@index([userId])
+}
+
+// 20. ChatMessage
+model ChatMessage {
+  id             String           @id @default(uuid())
+  conversationId String
+  senderRole     String
+  content        String           @db.Text
+  language       String           @default("en")
+  createdAt      DateTime         @default(now())
+
+  conversation   ChatConversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+
+  @@index([conversationId])
+}
+
+// 21. Notification
+model Notification {
+  id        String   @id @default(uuid())
+  userId    String
+  title     String
+  message   String   @db.Text
+  type      String   @default("INFO")
+  isRead    Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, isRead])
+}
+
+// 22. QuestionExposureHistory
+model QuestionExposureHistory {
+  id         String   @id @default(uuid())
+  userId     String
+  questionId String
+  examId     String?
+  mockTestId String?
+  exposedAt  DateTime @default(now())
+
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  question   Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, questionId, examId, mockTestId])
+  @@index([userId])
+  @@index([questionId])
+}
+

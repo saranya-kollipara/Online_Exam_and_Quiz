@@ -1,0 +1,66 @@
+:root {
+  /* Quentrix AI Theme Palette */
+  --bg-primary: #191B18;
+  --bg-secondary: #252923;
+  --bg-card: #30342D;
+  --bg-card-hover: #383D34;
+  --bg-glass: rgba(48, 52, 45, 0.75);
+  --bg-glass-input: rgba(37, 41, 35, 0.85);
+
+  /* Accents */
+  --accent-primary: #D87855;
+  --accent-primary-hover: #E28968;
+  --accent-primary-glow: rgba(216, 120, 85, 0.25);
+  
+  --accent-secondary: #B8D58B;
+  --accent-secondary-hover: #C7E29D;
+  --accent-secondary-glow: rgba(184, 213, 139, 0.25);
+
+  --accent-highlight: #E8C58D;
+  --accent-highlight-hover: #F2D39E;
+  
+  --accent-muted: #82769D;
+  --accent-muted-hover: #9689B3;
+
+  /* Status Colors */
+  --status-success: #B8D58B;
+  --status-warning: #E8C58D;
+  --status-danger: #E06C75;
+  --status-info: #79B8FF;
+
+  /* Typography */
+  --text-primary: #F4F0E8;
+  --text-secondary: #B8B8AE;
+  --text-muted: #848478;
+  --text-disabled: #5E5E56;
+
+  /* Borders & Dividers */
+  --border-subtle: rgba(244, 240, 232, 0.08);
+  --border-medium: rgba(244, 240, 232, 0.14);
+  --border-focus: rgba(216, 120, 85, 0.6);
+  --border-secondary-focus: rgba(184, 213, 139, 0.6);
+
+  /* Shadows */
+  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.35);
+  --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.45);
+  --shadow-lg: 0 10px 30px rgba(0, 0, 0, 0.55);
+  --shadow-glow: 0 0 20px rgba(216, 120, 85, 0.18);
+  --shadow-secondary-glow: 0 0 20px rgba(184, 213, 139, 0.18);
+
+  /* Spacing & Radii */
+  --radius-xs: 4px;
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 18px;
+  --radius-full: 9999px;
+
+  /* Typography families */
+  --font-main: 'Plus Jakarta Sans', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-code: 'JetBrains Mono', monospace;
+
+  /* Transitions */
+  --transition-fast: 0.15s ease;
+  --transition-normal: 0.25s ease;
+  --transition-smooth: 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
