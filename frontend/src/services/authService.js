@@ -31,47 +31,121 @@ function recordStudentLocally(studentData) {
 
 export const authService = {
   login: async ({ email, password, role = 'student' }) => {
+    const cleanEmail = (email || '').trim().toLowerCase();
+    const cleanPassword = (password || '').trim();
+
+    if (!cleanEmail || !cleanPassword) {
+      throw new Error('Please enter both email address and password.');
+    }
+
     try {
-      const res = await api.post('/auth/login', { email, password });
+      const res = await api.post('/auth/login', { email: cleanEmail, password: cleanPassword });
       if (res?.data?.token && res?.data?.user) {
+        const u = res.data.user;
+        const normalizedRole = String(u.role || '').toLowerCase() === 'admin' ? 'admin' : 'student';
         const session = {
           token: res.data.token,
-          user: res.data.user
+          user: {
+            ...u,
+            role: normalizedRole
+          }
         };
         storage.set(SESSION_KEY, session);
         return session;
       }
     } catch (apiErr) {
-      console.warn('Backend login unavailable or credentials rejected, using local mock session:', apiErr.message);
+      // If the backend rejected credentials with 401 or 403, do not bypass!
+      if (apiErr?.response?.status === 401 || apiErr?.response?.status === 403) {
+        throw new Error(apiErr?.response?.data?.message || 'Invalid email address or password.');
+      }
+      console.warn('Backend login endpoint unavailable, performing client credential verification:', apiErr.message);
     }
 
-    // Mock fallback
-    await new Promise((r) => setTimeout(r, 300));
-    const existing = MOCK_USERS.find(
-      (u) => u.email.toLowerCase() === email.toLowerCase()
-    );
+    // Client-side / Offline fallback (e.g. Vercel deployment where local MySQL backend is offline)
+    await new Promise((r) => setTimeout(r, 250));
 
-    let user;
-    if (existing) {
-      user = { ...existing };
-    } else {
-      user = {
-        id: 'usr_' + Date.now(),
-        name: email.split('@')[0].replace(/[._]/g, ' ').toUpperCase(),
-        email,
-        role: email.includes('admin') ? 'admin' : role,
-        avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=250&q=80',
-        institution: 'Indian Institute of Engineering & Technology',
-        stream: 'Computer Science & Engineering',
-        yearOfStudy: '3rd Year'
+    const isAdminLogin = cleanEmail.includes('admin') || role === 'admin' || cleanEmail === 'admin@quentrix.ai';
+
+    if (isAdminLogin) {
+      // Admin portal is strictly password protected!
+      // Valid admin passwords: Password@123, Admin@123
+      if (cleanPassword !== 'Password@123' && cleanPassword !== 'Admin@123') {
+        throw new Error('Access Denied: Invalid Administrative credentials. The Admin Console is password protected.');
+      }
+
+      const adminUser = {
+        ...MOCK_USERS[0],
+        email: cleanEmail,
+        role: 'admin'
       };
+      const session = {
+        token: 'jwt_mock_admin_' + Date.now(),
+        user: adminUser
+      };
+      storage.set(SESSION_KEY, session);
+      return session;
     }
 
-    const session = {
-      token: 'jwt_mock_' + (user.role || 'student') + '_' + Date.now(),
-      user
-    };
+    // Student Login
+    if (cleanEmail === 'student@quentrix.ai') {
+      if (cleanPassword !== 'Password@123' && cleanPassword !== 'Student@123' && cleanPassword !== 'student123') {
+        throw new Error('Invalid student password. Please try again.');
+      }
+      const studentUser = {
+        ...MOCK_USERS[1],
+        email: cleanEmail,
+        role: 'student'
+      };
+      const session = {
+        token: 'jwt_mock_student_' + Date.now(),
+        user: studentUser
+      };
+      storage.set(SESSION_KEY, session);
+      return session;
+    }
 
+    // Check if registered locally
+    const registeredList = storage.get(REGISTERED_STUDENTS_KEY) || [];
+    const foundReg = registeredList.find((s) => s.email?.toLowerCase() === cleanEmail);
+    if (foundReg) {
+      const studentUser = {
+        id: foundReg.id || 'usr_' + Date.now(),
+        name: foundReg.name,
+        email: foundReg.email,
+        role: 'student',
+        institution: foundReg.institution || 'State Engineering College',
+        stream: foundReg.stream || 'Computer Science & Engineering',
+        yearOfStudy: foundReg.year || '1st Year',
+        avatar: 'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?auto=format&fit=crop&w=250&q=80',
+        rank: 42,
+        totalPoints: 100,
+        averageScore: 0,
+        examsCompleted: 0,
+        badge: 'Novice Coder'
+      };
+      const session = {
+        token: 'jwt_mock_student_' + Date.now(),
+        user: studentUser
+      };
+      storage.set(SESSION_KEY, session);
+      return session;
+    }
+
+    // New student credentials
+    const studentUser = {
+      id: 'usr_' + Date.now(),
+      name: cleanEmail.split('@')[0].replace(/[._]/g, ' ').toUpperCase(),
+      email: cleanEmail,
+      role: 'student',
+      avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=250&q=80',
+      institution: 'Indian Institute of Engineering & Technology',
+      stream: 'Computer Science & Engineering',
+      yearOfStudy: '3rd Year'
+    };
+    const session = {
+      token: 'jwt_mock_student_' + Date.now(),
+      user: studentUser
+    };
     storage.set(SESSION_KEY, session);
     return session;
   },
@@ -149,46 +223,23 @@ export const authService = {
 
   getCurrentSession: () => {
     const session = storage.get(SESSION_KEY);
-    if (session && session.user) {
+    if (session && session.user && session.token) {
       return session;
     }
-    const defaultStudent = MOCK_USERS[1];
-    const defaultSession = {
-      token: 'jwt_mock_student_01',
-      user: defaultStudent
-    };
-    storage.set(SESSION_KEY, defaultSession);
-    return defaultSession;
+    return null;
   },
 
   switchRole: (newRole) => {
-    const targetUser = MOCK_USERS.find((u) => u.role === newRole) || {
-      ...MOCK_USERS[0],
-      role: newRole
-    };
+    // Only student role can be switched to without credentials
+    if (newRole === 'admin') {
+      throw new Error('Administrative console requires username and password verification.');
+    }
+    const targetUser = MOCK_USERS[1];
     const session = {
-      token: 'jwt_mock_' + newRole + '_' + Date.now(),
+      token: 'jwt_mock_student_' + Date.now(),
       user: { ...targetUser }
     };
     storage.set(SESSION_KEY, session);
-
-    // Asynchronously authenticate with backend to obtain real signed JWT token
-    const creds = newRole === 'admin'
-      ? { email: 'admin@quentrix.ai', password: 'Admin@123' }
-      : { email: 'student@quentrix.ai', password: 'Student@123' };
-
-    api.post('/auth/login', creds).then((res) => {
-      if (res?.data?.token) {
-        const liveSession = {
-          token: res.data.token,
-          user: res.data.user || targetUser
-        };
-        storage.set(SESSION_KEY, liveSession);
-      }
-    }).catch(() => {
-      // Offline fallback continues seamlessly
-    });
-
     return session;
   },
 

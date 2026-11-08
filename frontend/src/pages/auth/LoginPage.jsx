@@ -5,16 +5,15 @@ import { useToast } from '../../hooks/useToast';
 import Card from '../../components/common/Card';
 import Input from '../../components/common/Input';
 import Button from '../../components/common/Button';
-import Badge from '../../components/common/Badge';
-import { BrainCircuit, Lock, Mail, ArrowRight, Shield, GraduationCap, CheckCircle2 } from 'lucide-react';
+import { BrainCircuit, Lock, Mail, ArrowRight } from 'lucide-react';
 
 export default function LoginPage() {
-  const { login, switchRole } = useAuth();
+  const { login } = useAuth();
   const { success, error: toastError } = useToast();
   const navigate = useNavigate();
 
-  const [email, setEmail] = useState('student@quentrix.ai');
-  const [password, setPassword] = useState('••••••••');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [rememberMe, setRememberMe] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
 
@@ -23,26 +22,17 @@ export default function LoginPage() {
     setIsLoading(true);
     try {
       const user = await login({ email, password });
-      success(`Welcome back, ${user.name}!`);
-      if (user.role === 'admin') {
+      success(`Welcome back, ${user.name || user.firstName || 'User'}!`);
+      const userRole = String(user.role || '').toLowerCase();
+      if (userRole === 'admin') {
         navigate('/admin/dashboard');
       } else {
         navigate('/student/dashboard');
       }
     } catch (err) {
-      toastError(err.message || 'Login failed');
+      toastError(err.message || 'Login failed. Please check your credentials.');
     } finally {
       setIsLoading(false);
-    }
-  };
-
-  const handleQuickLogin = (role) => {
-    switchRole(role);
-    success(`Instant demo login as ${role.toUpperCase()}`);
-    if (role === 'admin') {
-      navigate('/admin/dashboard');
-    } else {
-      navigate('/student/dashboard');
     }
   };
 
@@ -83,63 +73,6 @@ export default function LoginPage() {
           </p>
         </div>
 
-        {/* Demo Fast Login Buttons */}
-        <div
-          style={{
-            backgroundColor: 'var(--bg-secondary)',
-            border: '1px solid var(--border-subtle)',
-            borderRadius: 'var(--radius-md)',
-            padding: '1rem',
-            marginBottom: '1.5rem'
-          }}
-        >
-          <div style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: '0.6rem' }}>
-            ⚡ Instant Role Preview (One-Click Demo Access)
-          </div>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.6rem' }}>
-            <button
-              type="button"
-              onClick={() => handleQuickLogin('admin')}
-              style={{
-                backgroundColor: 'rgba(216, 120, 85, 0.15)',
-                border: '1px solid rgba(216, 120, 85, 0.4)',
-                borderRadius: 'var(--radius-xs)',
-                padding: '0.55rem',
-                color: 'var(--accent-primary)',
-                fontWeight: 600,
-                fontSize: '0.82rem',
-                cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: '5px'
-              }}
-            >
-              <Shield size={14} /> Admin Console
-            </button>
-            <button
-              type="button"
-              onClick={() => handleQuickLogin('student')}
-              style={{
-                backgroundColor: 'rgba(184, 213, 139, 0.15)',
-                border: '1px solid rgba(184, 213, 139, 0.4)',
-                borderRadius: 'var(--radius-xs)',
-                padding: '0.55rem',
-                color: 'var(--accent-secondary)',
-                fontWeight: 600,
-                fontSize: '0.82rem',
-                cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: '5px'
-              }}
-            >
-              <GraduationCap size={15} /> Student Portal
-            </button>
-          </div>
-        </div>
-
         <Card style={{ padding: '2rem' }}>
           <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
             <Input
@@ -148,7 +81,7 @@ export default function LoginPage() {
               required
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              placeholder="student@quentrix.ai or admin@quentrix.ai"
+              placeholder="name@example.com"
               leftIcon={<Mail size={16} />}
             />
 

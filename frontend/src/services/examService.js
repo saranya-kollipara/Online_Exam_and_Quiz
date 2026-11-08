@@ -10,7 +10,18 @@ function initializeExams() {
     storage.set(EXAMS_KEY, MOCK_EXAMS);
     return MOCK_EXAMS;
   }
-  return stored;
+  let modified = false;
+  const merged = [...stored];
+  for (const m of MOCK_EXAMS) {
+    if (!merged.some((e) => e && e.id === m.id)) {
+      merged.push(m);
+      modified = true;
+    }
+  }
+  if (modified) {
+    storage.set(EXAMS_KEY, merged);
+  }
+  return merged;
 }
 
 export const examService = {
@@ -26,7 +37,7 @@ export const examService = {
     }
 
     // Merge with locally created/stored exams so newly published exams are immediately visible
-    const localExams = storage.get(EXAMS_KEY) || [];
+    const localExams = initializeExams();
     const combined = [...backendExams];
     for (const le of localExams) {
       if (le && le.id && !combined.some((be) => be.id === le.id)) {
@@ -34,7 +45,7 @@ export const examService = {
       }
     }
 
-    let exams = combined.length > 0 ? combined : initializeExams();
+    let exams = combined;
 
     if (filters.status && filters.status !== 'all') {
       exams = exams.filter((e) => String(e.status).toLowerCase() === String(filters.status).toLowerCase());
@@ -187,9 +198,14 @@ export const examService = {
       const res = await api.post('/exams', examData);
       if (res?.data) {
         const exams = initializeExams();
-        exams.unshift(res.data);
+        const savedExam = {
+          ...res.data,
+          status: res.data.status || examData.status || 'active',
+          populatedQuestions: examData.questions || res.data.questions || []
+        };
+        exams.unshift(savedExam);
         storage.set(EXAMS_KEY, exams);
-        return res.data;
+        return savedExam;
       }
     } catch (apiErr) {
       console.warn('Backend create exam deferred, storing locally:', apiErr.message);
@@ -224,7 +240,8 @@ export const examService = {
       averageScore: 0,
       highestScore: 0,
       description: examData.description || `Comprehensive examination generated for ${examData.subject}.`,
-      questions: examData.questions || ['q_ds_001', 'q_ds_002', 'q_ds_003', 'q_ds_004']
+      questions: examData.questions || ['q_ds_001', 'q_ds_002', 'q_ds_003', 'q_ds_004'],
+      populatedQuestions: examData.questions || []
     };
 
     exams.unshift(newExam);

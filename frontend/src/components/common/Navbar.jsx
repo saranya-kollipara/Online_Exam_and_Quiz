@@ -7,7 +7,6 @@ import Badge from './Badge';
 import {
   BrainCircuit,
   Sparkles,
-  ArrowRightLeft,
   LogOut,
   User,
   Menu,
@@ -18,21 +17,9 @@ import {
 import styles from './Navbar.module.css';
 
 export default function Navbar({ variant = 'public' }) {
-  const { user, isAuthenticated, isAdmin, isStudent, switchRole, logout } = useAuth();
-  const { info } = useToast();
+  const { user, isAuthenticated, isAdmin, isStudent, logout } = useAuth();
   const navigate = useNavigate();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-
-  const handleRoleToggle = () => {
-    const nextRole = isAdmin ? 'student' : 'admin';
-    switchRole(nextRole);
-    info(`Switched interface role to ${nextRole.toUpperCase()}`);
-    if (nextRole === 'admin') {
-      navigate('/admin/dashboard');
-    } else {
-      navigate('/student/dashboard');
-    }
-  };
 
   const handleLogout = async () => {
     await logout();
@@ -97,19 +84,6 @@ export default function Navbar({ variant = 'public' }) {
 
         {/* Right actions */}
         <div className={styles.actions}>
-          {/* Quick Role Switcher Button - visible for rapid demo testing */}
-          <button
-            onClick={handleRoleToggle}
-            className={styles.roleSwitcherBtn}
-            title="Toggle between Admin and Student experience"
-          >
-            <ArrowRightLeft size={13} />
-            <span>Role: {isAdmin ? 'Admin' : 'Student'}</span>
-            <Badge variant={isAdmin ? 'primary' : 'secondary'}>
-              {isAdmin ? 'Admin' : 'Student'}
-            </Badge>
-          </button>
-
           {isAuthenticated ? (
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
               <Link
@@ -194,13 +168,32 @@ export default function Navbar({ variant = 'public' }) {
           <Link to="/features" onClick={() => setMobileMenuOpen(false)}>Features</Link>
           <Link to="/about" onClick={() => setMobileMenuOpen(false)}>About</Link>
           <Link to="/contact" onClick={() => setMobileMenuOpen(false)}>Contact</Link>
-          <Link
-            to={isAdmin ? '/admin/dashboard' : '/student/dashboard'}
-            onClick={() => setMobileMenuOpen(false)}
-            style={{ color: 'var(--accent-highlight)', fontWeight: 600 }}
-          >
-            Go to {isAdmin ? 'Admin Console' : 'Student Portal'}
-          </Link>
+          {isAuthenticated ? (
+            <Link
+              to={isAdmin ? '/admin/dashboard' : '/student/dashboard'}
+              onClick={() => setMobileMenuOpen(false)}
+              style={{ color: 'var(--accent-highlight)', fontWeight: 600 }}
+            >
+              Go to {isAdmin ? 'Admin Console' : 'Student Portal'}
+            </Link>
+          ) : (
+            <>
+              <Link
+                to="/auth/login"
+                onClick={() => setMobileMenuOpen(false)}
+                style={{ color: 'var(--accent-primary)', fontWeight: 600 }}
+              >
+                Sign In
+              </Link>
+              <Link
+                to="/auth/register"
+                onClick={() => setMobileMenuOpen(false)}
+                style={{ color: 'var(--accent-secondary)', fontWeight: 600 }}
+              >
+                Create Account
+              </Link>
+            </>
+          )}
         </div>
       )}
     </header>
