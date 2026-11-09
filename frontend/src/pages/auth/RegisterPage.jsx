@@ -88,7 +88,7 @@ export default function RegisterPage() {
                 required
                 value={formData.name}
                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                placeholder="Aditya Vardhan"
+                placeholder="e.g. John Doe"
                 leftIcon={<User size={16} />}
               />
 
@@ -98,7 +98,7 @@ export default function RegisterPage() {
                 required
                 value={formData.email}
                 onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                placeholder="aditya.v@university.edu"
+                placeholder="student@university.edu"
                 leftIcon={<Mail size={16} />}
               />
             </div>

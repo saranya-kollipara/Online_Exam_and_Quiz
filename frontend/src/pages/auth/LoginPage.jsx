@@ -5,7 +5,7 @@ import { useToast } from '../../hooks/useToast';
 import Card from '../../components/common/Card';
 import Input from '../../components/common/Input';
 import Button from '../../components/common/Button';
-import { BrainCircuit, Lock, Mail, ArrowRight } from 'lucide-react';
+import { BrainCircuit, Lock, Mail, ArrowRight, AlertCircle, UserPlus } from 'lucide-react';
 
 export default function LoginPage() {
   const { login } = useAuth();
@@ -16,10 +16,12 @@ export default function LoginPage() {
   const [password, setPassword] = useState('');
   const [rememberMe, setRememberMe] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
+  const [loginError, setLoginError] = useState(null);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsLoading(true);
+    setLoginError(null);
     try {
       const user = await login({ email, password });
       success(`Welcome back, ${user.name || user.firstName || 'User'}!`);
@@ -30,7 +32,10 @@ export default function LoginPage() {
         navigate('/student/dashboard');
       }
     } catch (err) {
-      toastError(err.message || 'Login failed. Please check your credentials.');
+      const msg = err.message || 'Login failed. Please check your credentials.';
+      const isNotFound = msg.toLowerCase().includes('no account found') || msg.toLowerCase().includes('sign up');
+      setLoginError({ message: msg, isNotFound });
+      toastError(msg);
     } finally {
       setIsLoading(false);
     }
@@ -74,6 +79,46 @@ export default function LoginPage() {
         </div>
 
         <Card style={{ padding: '2rem' }}>
+          {loginError && (
+            <div
+              style={{
+                backgroundColor: 'rgba(239, 68, 68, 0.1)',
+                border: '1px solid rgba(239, 68, 68, 0.35)',
+                borderRadius: 'var(--radius-sm)',
+                padding: '0.9rem 1.1rem',
+                marginBottom: '1.25rem',
+                color: '#f87171',
+                fontSize: '0.88rem',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '0.6rem'
+              }}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontWeight: 600 }}>
+                <AlertCircle size={18} color="#ef4444" />
+                <span>{loginError.message}</span>
+              </div>
+              {loginError.isNotFound && (
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginTop: '0.2rem' }}>
+                  <Button
+                    type="button"
+                    variant="primary"
+                    size="sm"
+                    onClick={() => navigate('/auth/register')}
+                    rightIcon={<UserPlus size={14} />}
+                    style={{
+                      fontWeight: 700,
+                      padding: '0.45rem 0.9rem',
+                      fontSize: '0.82rem'
+                    }}
+                  >
+                    Sign up to continue
+                  </Button>
+                </div>
+              )}
+            </div>
+          )}
+
           <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
             <Input
               label="Email Address"

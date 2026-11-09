@@ -12,12 +12,12 @@ export default function StudentProfilePage() {
   const { success, error: toastError } = useToast();
 
   const [formData, setFormData] = useState({
-    name: user?.name || 'Aditya Vardhan',
-    email: user?.email || 'student@quentrix.ai',
-    institution: user?.institution || 'Indian Institute of Engineering & Technology',
-    stream: user?.stream || 'Computer Science & Engineering',
-    yearOfStudy: user?.yearOfStudy || '3rd Year (Semester 6)',
-    rollNo: user?.rollNo || '22CS8042'
+    name: user?.name || '',
+    email: user?.email || '',
+    institution: user?.institution || '',
+    stream: user?.stream || '',
+    yearOfStudy: user?.yearOfStudy || '',
+    rollNo: user?.rollNo || ''
   });
 
   const [passwords, setPasswords] = useState({

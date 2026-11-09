@@ -1,28 +1,40 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Card from '../../components/common/Card';
 import Badge from '../../components/common/Badge';
 import Button from '../../components/common/Button';
 import Input from '../../components/common/Input';
 import { useToast } from '../../hooks/useToast';
+import { storage } from '../../utils/storage';
+import api from '../../services/api';
 import { Award, Download, Search, CheckCircle2, XCircle, Clock } from 'lucide-react';
 
 export default function ResultsPage() {
   const { success } = useToast();
   const [search, setSearch] = useState('');
+  const [submissions, setSubmissions] = useState([]);
 
-  const submissions = [
-    { id: 'sub_1', student: 'Aditya Vardhan', rollNo: '22CS8042', exam: 'Data Structures Mid-Term', score: 46, max: 50, percentage: 92, time: '34m', status: 'Passed', date: 'Nov 06, 2026' },
-    { id: 'sub_2', student: 'Siddharth Rao', rollNo: '22CS8019', exam: 'Data Structures Mid-Term', score: 48, max: 50, percentage: 96, time: '29m', status: 'Passed', date: 'Nov 06, 2026' },
-    { id: 'sub_3', student: 'Ananya Sharma', rollNo: '22IT8011', exam: 'Data Structures Mid-Term', score: 44, max: 50, percentage: 88, time: '38m', status: 'Passed', date: 'Nov 06, 2026' },
-    { id: 'sub_4', student: 'Vikramaditya Bose', rollNo: '22CS8077', exam: 'Operating Systems Assessment', score: 54, max: 60, percentage: 90, time: '48m', status: 'Passed', date: 'Nov 05, 2026' },
-    { id: 'sub_5', student: 'Rohan Kulkarni', rollNo: '22CS8094', exam: 'Data Structures Mid-Term', score: 28, max: 50, percentage: 56, time: '44m', status: 'Review', date: 'Nov 05, 2026' }
-  ];
+  useEffect(() => {
+    async function fetchResults() {
+      try {
+        const res = await api.get('/results');
+        if (res?.data && Array.isArray(res.data) && res.data.length > 0) {
+          setSubmissions(res.data);
+          return;
+        }
+      } catch (e) {
+        // fallback to storage
+      }
+      const local = storage.get('exam_submissions') || [];
+      setSubmissions(local);
+    }
+    fetchResults();
+  }, []);
 
   const filtered = submissions.filter(
     (s) =>
-      s.student.toLowerCase().includes(search.toLowerCase()) ||
-      s.exam.toLowerCase().includes(search.toLowerCase()) ||
-      s.rollNo.toLowerCase().includes(search.toLowerCase())
+      s.student?.toLowerCase().includes(search.toLowerCase()) ||
+      s.exam?.toLowerCase().includes(search.toLowerCase()) ||
+      s.rollNo?.toLowerCase().includes(search.toLowerCase())
   );
 
   const handleExport = () => {
@@ -74,32 +86,40 @@ export default function ResultsPage() {
               </tr>
             </thead>
             <tbody>
-              {filtered.map((sub) => (
-                <tr key={sub.id} style={{ borderBottom: '1px solid var(--border-subtle)', color: 'var(--text-secondary)' }}>
-                  <td style={{ padding: '1rem 1.25rem', fontWeight: 600, color: 'var(--text-primary)' }}>
-                    {sub.student}
-                  </td>
-                  <td style={{ padding: '1rem', fontFamily: 'var(--font-code)', fontSize: '0.82rem' }}>
-                    {sub.rollNo}
-                  </td>
-                  <td style={{ padding: '1rem' }}>{sub.exam}</td>
-                  <td style={{ padding: '1rem', fontWeight: 700, color: 'var(--accent-secondary)' }}>
-                    {sub.score} / {sub.max}
-                  </td>
-                  <td style={{ padding: '1rem', fontWeight: 700, color: 'var(--accent-highlight)' }}>
-                    {sub.percentage}%
-                  </td>
-                  <td style={{ padding: '1rem', color: 'var(--text-muted)' }}>{sub.time}</td>
-                  <td style={{ padding: '1rem' }}>
-                    <Badge variant={sub.status === 'Passed' ? 'secondary' : 'danger'}>
-                      {sub.status}
-                    </Badge>
-                  </td>
-                  <td style={{ padding: '1rem 1.25rem', fontSize: '0.8rem', color: 'var(--text-muted)' }}>
-                    {sub.date}
+              {filtered.length === 0 ? (
+                <tr>
+                  <td colSpan="8" style={{ padding: '3rem 1rem', textAlign: 'center', color: 'var(--text-muted)' }}>
+                    No candidate examination submissions recorded yet.
                   </td>
                 </tr>
-              ))}
+              ) : (
+                filtered.map((sub) => (
+                  <tr key={sub.id} style={{ borderBottom: '1px solid var(--border-subtle)', color: 'var(--text-secondary)' }}>
+                    <td style={{ padding: '1rem 1.25rem', fontWeight: 600, color: 'var(--text-primary)' }}>
+                      {sub.student}
+                    </td>
+                    <td style={{ padding: '1rem', fontFamily: 'var(--font-code)', fontSize: '0.82rem' }}>
+                      {sub.rollNo}
+                    </td>
+                    <td style={{ padding: '1rem' }}>{sub.exam}</td>
+                    <td style={{ padding: '1rem', fontWeight: 700, color: 'var(--accent-secondary)' }}>
+                      {sub.score} / {sub.max}
+                    </td>
+                    <td style={{ padding: '1rem', fontWeight: 700, color: 'var(--accent-highlight)' }}>
+                      {sub.percentage}%
+                    </td>
+                    <td style={{ padding: '1rem', color: 'var(--text-muted)' }}>{sub.time}</td>
+                    <td style={{ padding: '1rem' }}>
+                      <Badge variant={sub.status === 'Passed' ? 'secondary' : 'danger'}>
+                        {sub.status}
+                      </Badge>
+                    </td>
+                    <td style={{ padding: '1rem 1.25rem', fontSize: '0.8rem', color: 'var(--text-muted)' }}>
+                      {sub.date}
+                    </td>
+                  </tr>
+                ))
+              )}
             </tbody>
           </table>
         </div>

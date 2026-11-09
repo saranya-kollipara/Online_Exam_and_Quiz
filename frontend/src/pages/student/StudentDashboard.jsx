@@ -81,9 +81,9 @@ export default function StudentDashboard() {
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', marginBottom: '0.5rem' }}>
             <span style={{ fontSize: '1.5rem' }}>👋</span>
             <h1 className="heading-2" style={{ margin: 0 }}>
-              Welcome back, {user?.name?.split(' ')[0] || 'Aditya'}!
+              Welcome back, {user?.name?.split(' ')[0] || user?.firstName || 'Student'}!
             </h1>
-            <Badge variant="highlight">Rank #{user?.rank || 4} Overall</Badge>
+            {user?.rank ? <Badge variant="highlight">Rank #{user.rank} Overall</Badge> : null}
           </div>
           <p style={{ color: 'var(--text-secondary)', fontSize: '0.92rem', maxWidth: '640px', lineHeight: 1.5, margin: 0 }}>
             You have <strong>{activeExams.length} active examination</strong> waiting for your submission. Your mastery in Data Structures is currently at <strong>72%</strong>.

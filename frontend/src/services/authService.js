@@ -9,11 +9,13 @@ const RECENT_ACTIVITY_KEY = 'admin_recent_activity';
 function recordStudentLocally(studentData) {
   try {
     const list = storage.get(REGISTERED_STUDENTS_KEY) || [];
-    const exists = list.some((s) => s.email?.toLowerCase() === studentData.email?.toLowerCase());
-    if (!exists) {
+    const index = list.findIndex((s) => s.email?.toLowerCase() === studentData.email?.toLowerCase());
+    if (index >= 0) {
+      list[index] = { ...list[index], ...studentData };
+    } else {
       list.unshift(studentData);
-      storage.set(REGISTERED_STUDENTS_KEY, list);
     }
+    storage.set(REGISTERED_STUDENTS_KEY, list);
 
     const activities = storage.get(RECENT_ACTIVITY_KEY) || [];
     activities.unshift({
@@ -54,9 +56,13 @@ export const authService = {
         return session;
       }
     } catch (apiErr) {
-      // If the backend rejected credentials with 401 or 403, do not bypass!
+      // Backend returned 404 or explicitly notified that account was not found
+      if (apiErr?.response?.status === 404 || apiErr?.message?.toLowerCase().includes('no account found')) {
+        throw new Error('No account found with this email. Sign up to continue.');
+      }
+      // Backend returned 401 or 403 (invalid password or deactivated)
       if (apiErr?.response?.status === 401 || apiErr?.response?.status === 403) {
-        throw new Error(apiErr?.response?.data?.message || 'Invalid email address or password.');
+        throw new Error(apiErr?.response?.data?.message || 'Invalid password. Please check your credentials.');
       }
       console.warn('Backend login endpoint unavailable, performing client credential verification:', apiErr.message);
     }
@@ -64,7 +70,7 @@ export const authService = {
     // Client-side / Offline fallback (e.g. Vercel deployment where local MySQL backend is offline)
     await new Promise((r) => setTimeout(r, 250));
 
-    const isAdminLogin = cleanEmail.includes('admin') || role === 'admin' || cleanEmail === 'admin@quentrix.ai';
+    const isAdminLogin = cleanEmail === 'admin@quentrix.ai' || cleanEmail.includes('admin') || role === 'admin';
 
     if (isAdminLogin) {
       // Admin portal is strictly password protected!
@@ -86,62 +92,36 @@ export const authService = {
       return session;
     }
 
-    // Student Login
-    if (cleanEmail === 'student@quentrix.ai') {
-      if (cleanPassword !== 'Password@123' && cleanPassword !== 'Student@123' && cleanPassword !== 'student123') {
-        throw new Error('Invalid student password. Please try again.');
-      }
-      const studentUser = {
-        ...MOCK_USERS[1],
-        email: cleanEmail,
-        role: 'student'
-      };
-      const session = {
-        token: 'jwt_mock_student_' + Date.now(),
-        user: studentUser
-      };
-      storage.set(SESSION_KEY, session);
-      return session;
-    }
-
-    // Check if registered locally
+    // Student Login verification against registered students
     const registeredList = storage.get(REGISTERED_STUDENTS_KEY) || [];
     const foundReg = registeredList.find((s) => s.email?.toLowerCase() === cleanEmail);
-    if (foundReg) {
-      const studentUser = {
-        id: foundReg.id || 'usr_' + Date.now(),
-        name: foundReg.name,
-        email: foundReg.email,
-        role: 'student',
-        institution: foundReg.institution || 'State Engineering College',
-        stream: foundReg.stream || 'Computer Science & Engineering',
-        yearOfStudy: foundReg.year || '1st Year',
-        avatar: 'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?auto=format&fit=crop&w=250&q=80',
-        rank: 42,
-        totalPoints: 100,
-        averageScore: 0,
-        examsCompleted: 0,
-        badge: 'Novice Coder'
-      };
-      const session = {
-        token: 'jwt_mock_student_' + Date.now(),
-        user: studentUser
-      };
-      storage.set(SESSION_KEY, session);
-      return session;
+
+    if (!foundReg) {
+      // User is NOT registered - do not allow login!
+      throw new Error('No account found with this email. Sign up to continue.');
     }
 
-    // New student credentials
+    // User is registered - verify password
+    if (foundReg.password && foundReg.password !== cleanPassword) {
+      throw new Error('Invalid password. Please check your credentials.');
+    }
+
     const studentUser = {
-      id: 'usr_' + Date.now(),
-      name: cleanEmail.split('@')[0].replace(/[._]/g, ' ').toUpperCase(),
-      email: cleanEmail,
+      id: foundReg.id || 'usr_' + Date.now(),
+      name: foundReg.name,
+      email: foundReg.email,
       role: 'student',
+      institution: foundReg.institution || 'State Engineering College',
+      stream: foundReg.stream || 'Computer Science & Engineering',
+      yearOfStudy: foundReg.year || '1st Year',
       avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=250&q=80',
-      institution: 'Indian Institute of Engineering & Technology',
-      stream: 'Computer Science & Engineering',
-      yearOfStudy: '3rd Year'
+      rank: foundReg.rank || 1,
+      totalPoints: foundReg.totalPoints || 0,
+      averageScore: 0,
+      examsCompleted: 0,
+      badge: 'Student Scholar'
     };
+
     const session = {
       token: 'jwt_mock_student_' + Date.now(),
       user: studentUser
@@ -155,14 +135,14 @@ export const authService = {
     let registeredUser = null;
 
     try {
-      const names = (formData.name || 'Aditya Vardhan').trim().split(' ');
+      const names = (formData.name || 'Candidate').trim().split(' ');
       const res = await api.post('/auth/register', {
         email: formData.email,
         password: formData.password,
-        firstName: names[0] || 'Aditya',
-        lastName: names.slice(1).join(' ') || 'Candidate',
+        firstName: names[0] || 'Candidate',
+        lastName: names.slice(1).join(' ') || 'Scholar',
         institution: formData.institution || 'Engineering College',
-        yearOfStudy: formData.yearOfStudy || '3rd Year',
+        yearOfStudy: formData.yearOfStudy || '1st Year',
         streamId: formData.stream || 'cse',
         rollNumber: formData.rollNumber
       });
@@ -189,12 +169,12 @@ export const authService = {
         institution: formData.institution || 'State Engineering College',
         stream: formData.streamName || formData.stream || 'Computer Science & Engineering',
         yearOfStudy: formData.yearOfStudy || '1st Year',
-        avatar: 'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?auto=format&fit=crop&w=250&q=80',
-        rank: 42,
-        totalPoints: 100,
+        avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=250&q=80',
+        rank: 1,
+        totalPoints: 0,
         averageScore: 0,
         examsCompleted: 0,
-        badge: 'Novice Coder'
+        badge: 'Novice Scholar'
       };
 
       session = {
@@ -204,11 +184,12 @@ export const authService = {
       storage.set(SESSION_KEY, session);
     }
 
-    // Always record student so they immediately appear in Admin Dashboard and Student Cohort Directory
+    // Record student with their credentials so they can login and appear in Admin Directory
     recordStudentLocally({
       id: registeredUser.id,
       name: registeredUser.name || `${registeredUser.firstName || ''} ${registeredUser.lastName || ''}`.trim() || formData.name,
       email: registeredUser.email || formData.email,
+      password: formData.password,
       stream: registeredUser.studentProfile?.stream?.name || formData.streamName || formData.stream || 'Computer Science & Engineering',
       year: registeredUser.studentProfile?.yearOfStudy || formData.yearOfStudy || '1st Year',
       institution: registeredUser.studentProfile?.institution || formData.institution || 'State Engineering College',
@@ -223,24 +204,29 @@ export const authService = {
 
   getCurrentSession: () => {
     const session = storage.get(SESSION_KEY);
-    if (session && session.user && session.token) {
-      return session;
+    if (!session || !session.user || !session.token) {
+      return null;
     }
-    return null;
+
+    // Always purge legacy sample student sessions
+    const email = String(session.user.email || '').toLowerCase();
+    const name = String(session.user.name || '').toLowerCase();
+
+    if (
+      email === 'student@quentrix.ai' ||
+      name.includes('aditya vardhan') ||
+      session.user.id === 'user_student_01' ||
+      session.token === 'jwt_mock_student_01'
+    ) {
+      storage.remove(SESSION_KEY);
+      return null;
+    }
+
+    return session;
   },
 
-  switchRole: (newRole) => {
-    // Only student role can be switched to without credentials
-    if (newRole === 'admin') {
-      throw new Error('Administrative console requires username and password verification.');
-    }
-    const targetUser = MOCK_USERS[1];
-    const session = {
-      token: 'jwt_mock_student_' + Date.now(),
-      user: { ...targetUser }
-    };
-    storage.set(SESSION_KEY, session);
-    return session;
+  switchRole: () => {
+    throw new Error('Direct role switching is disabled. Please authenticate through the login portal.');
   },
 
   logout: async () => {

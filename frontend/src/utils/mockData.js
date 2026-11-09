@@ -47,23 +47,6 @@ export const MOCK_USERS = [
     title: 'Head of Examination & Academic Assessment',
     institution: 'National Institute of Technology & AI',
     department: 'School of Computing'
-  },
-  {
-    id: 'user_student_01',
-    name: 'Aditya Vardhan',
-    email: 'student@quentrix.ai',
-    role: 'student',
-    avatar: 'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?auto=format&fit=crop&w=250&q=80',
-    institution: 'Indian Institute of Engineering & Technology',
-    stream: 'Computer Science & Engineering',
-    streamId: 'cse',
-    yearOfStudy: '3rd Year (Semester 6)',
-    rollNo: '22CS8042',
-    rank: 4,
-    totalPoints: 2840,
-    averageScore: 84.5,
-    examsCompleted: 14,
-    badge: 'Code Grandmaster'
   }
 ];
 
@@ -201,145 +184,7 @@ export const MOCK_QUESTIONS = [
   }
 ];
 
-export const MOCK_EXAMS = [
-  {
-    id: 'exam_cs_301',
-    title: 'Data Structures & Algorithms Comprehensive Mid-Term',
-    stream: 'Computer Science & Engineering',
-    streamId: 'cse',
-    subject: 'Data Structures',
-    topic: 'Trees, Linked Lists & Graphs',
-    durationMinutes: 45,
-    totalQuestions: 25,
-    totalMarks: 50,
-    negativeMarking: true,
-    negativeMarks: 0.5,
-    difficulty: 'Medium',
-    questionType: 'Mixed',
-    status: 'active', // 'active', 'upcoming', 'completed', 'draft'
-    startDate: '2026-11-05T09:00:00Z',
-    endDate: '2026-11-15T23:59:59Z',
-    maxAttempts: 1,
-    attemptsAllowed: 1,
-    attemptsMade: 0,
-    totalEnrolled: 184,
-    participated: 142,
-    averageScore: 36.8,
-    highestScore: 48.0,
-    description: 'Formal academic midterm covering non-linear data structures, binary search trees, heap structures, and graph traversals (BFS/DFS).',
-    questions: [
-      'q_ds_001', 'q_ds_002', 'q_ds_003', 'q_ds_004', 'q_ds_005', 'q_ds_006', 'q_prog_001'
-    ]
-  },
-  {
-    id: 'exam_cs_302',
-    title: 'Operating Systems Concurrency & Deadlocks Assessment',
-    stream: 'Computer Science & Engineering',
-    streamId: 'cse',
-    subject: 'Operating Systems',
-    topic: 'Deadlocks & Process Synchronization',
-    durationMinutes: 60,
-    totalQuestions: 25,
-    totalMarks: 50,
-    negativeMarking: true,
-    negativeMarks: 0.5,
-    difficulty: 'Hard',
-    questionType: 'MCQ',
-    status: 'active',
-    startDate: '2026-11-01T10:00:00Z',
-    endDate: '2026-11-30T20:00:00Z',
-    maxAttempts: 2,
-    attemptsAllowed: 2,
-    attemptsMade: 0,
-    totalEnrolled: 210,
-    participated: 45,
-    averageScore: 32.5,
-    highestScore: 48.0,
-    description: "Evaluates mastery over Banker's Algorithm, semaphores, mutex locks, condition variables, and virtual memory paging.",
-    questions: ['q_ds_001', 'q_ds_002', 'q_ds_004', 'q_ds_005', 'q_ds_006']
-  },
-  {
-    id: 'exam_cs_303',
-    title: 'Database Systems & SQL Optimization Final Quiz',
-    stream: 'Computer Science & Engineering',
-    streamId: 'cse',
-    subject: 'Database Management Systems',
-    topic: 'Normalization & Transactions',
-    durationMinutes: 40,
-    totalQuestions: 20,
-    totalMarks: 40,
-    negativeMarking: false,
-    negativeMarks: 0,
-    difficulty: 'Easy',
-    questionType: 'MCQ',
-    status: 'active',
-    startDate: '2026-11-01T10:00:00Z',
-    endDate: '2026-11-30T20:00:00Z',
-    maxAttempts: 2,
-    attemptsAllowed: 2,
-    attemptsMade: 0,
-    totalEnrolled: 195,
-    participated: 118,
-    averageScore: 33.4,
-    highestScore: 40.0,
-    description: 'Core evaluation on 1NF through BCNF normalization, ACID properties, serializability, and B+ tree indexing.',
-    questions: ['q_ds_001', 'q_ds_004', 'q_ds_005', 'q_ds_006']
-  },
-  {
-    id: 'exam_cs_304',
-    title: 'Full-Stack Web Development & Modern JS Sprint',
-    stream: 'Information Technology',
-    streamId: 'it',
-    subject: 'Web Technologies',
-    topic: 'React, ES6+ & REST APIs',
-    durationMinutes: 50,
-    totalQuestions: 20,
-    totalMarks: 40,
-    negativeMarking: true,
-    negativeMarks: 0.25,
-    difficulty: 'Medium',
-    questionType: 'Mixed',
-    status: 'active',
-    startDate: '2026-11-01T08:00:00Z',
-    endDate: '2026-11-30T22:00:00Z',
-    maxAttempts: 2,
-    attemptsAllowed: 2,
-    attemptsMade: 0,
-    totalEnrolled: 160,
-    participated: 110,
-    averageScore: 29.5,
-    highestScore: 39.0,
-    description: 'Practical test of asynchronous JavaScript, DOM manipulation, React hooks lifecycle, and secure API design.',
-    questions: ['q_ds_001', 'q_ds_003', 'q_ds_004', 'q_ds_005']
-  },
-  {
-    id: 'exam_cs_305',
-    title: 'Computer Networks Protocols & Network Security Evaluation',
-    stream: 'Computer Science & Engineering',
-    streamId: 'cse',
-    subject: 'Computer Networks',
-    topic: 'TCP/IP, Routing & Cryptography',
-    durationMinutes: 45,
-    totalQuestions: 20,
-    totalMarks: 40,
-    negativeMarking: true,
-    negativeMarks: 0.5,
-    difficulty: 'Medium',
-    questionType: 'MCQ',
-    status: 'active',
-    startDate: '2026-11-01T08:00:00Z',
-    endDate: '2026-11-30T22:00:00Z',
-    maxAttempts: 2,
-    attemptsAllowed: 2,
-    attemptsMade: 0,
-    totalEnrolled: 175,
-    participated: 89,
-    averageScore: 31.2,
-    highestScore: 40.0,
-    description: 'Comprehensive test on OSI layers, subnetting, TCP flow control, Dijkstra routing, and symmetric encryption.',
-    questions: ['q_ds_001', 'q_ds_002', 'q_ds_004', 'q_ds_006']
-  }
-];
+export const MOCK_EXAMS = [];
 
 export const MOCK_CODING_PROBLEMS = [
   {
@@ -567,68 +412,32 @@ toggleBtn.addEventListener('click', () => {
   }
 ];
 
-export const MOCK_LEADERBOARD = [
-  { rank: 1, name: 'Siddharth Rao', stream: 'Computer Science', examsCount: 18, avgPercentage: 96.4, totalScore: 890, avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=150&q=80', badge: 'Diamond Master' },
-  { rank: 2, name: 'Ananya Sharma', stream: 'Information Technology', examsCount: 16, avgPercentage: 94.8, totalScore: 865, avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=150&q=80', badge: 'Diamond Master' },
-  { rank: 3, name: 'Vikramaditya Bose', stream: 'Computer Science', examsCount: 17, avgPercentage: 92.5, totalScore: 840, avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=150&q=80', badge: 'Platinum Pro' },
-  { rank: 4, name: 'Aditya Vardhan (You)', stream: 'Computer Science', examsCount: 14, avgPercentage: 88.6, totalScore: 785, avatar: 'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?auto=format&fit=crop&w=150&q=80', isCurrentUser: true, badge: 'Code Grandmaster' },
-  { rank: 5, name: 'Sneha Patel', stream: 'Electronics & Comm.', examsCount: 13, avgPercentage: 86.2, totalScore: 742, avatar: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?auto=format&fit=crop&w=150&q=80', badge: 'Gold Scholar' },
-  { rank: 6, name: 'Rohan Kulkarni', stream: 'Computer Science', examsCount: 12, avgPercentage: 84.7, totalScore: 710, avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=crop&w=150&q=80', badge: 'Gold Scholar' },
-  { rank: 7, name: 'Meera Nambiar', stream: 'Electrical & Electronics', examsCount: 14, avgPercentage: 83.1, totalScore: 695, avatar: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=150&q=80', badge: 'Silver Ace' },
-  { rank: 8, name: 'Karthik Raja', stream: 'Mechanical Engineering', examsCount: 11, avgPercentage: 81.9, totalScore: 670, avatar: 'https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?auto=format&fit=crop&w=150&q=80', badge: 'Silver Ace' }
-];
+export const MOCK_LEADERBOARD = [];
 
-export const MOCK_STUDENTS_LIST = [
-  { id: 's1', name: 'Aditya Vardhan', email: 'aditya.v@quentrix.edu', stream: 'Computer Science', year: '3rd Year', examsTaken: 14, avgScore: '88.6%', status: 'Active', lastActive: '10 mins ago' },
-  { id: 's2', name: 'Siddharth Rao', email: 'siddharth.r@quentrix.edu', stream: 'Computer Science', year: '4th Year', examsTaken: 18, avgScore: '96.4%', status: 'Active', lastActive: '2 hours ago' },
-  { id: 's3', name: 'Ananya Sharma', email: 'ananya.s@quentrix.edu', stream: 'Information Technology', year: '3rd Year', examsTaken: 16, avgScore: '94.8%', status: 'Active', lastActive: 'Yesterday' },
-  { id: 's4', name: 'Vikramaditya Bose', email: 'vikram.b@quentrix.edu', stream: 'Computer Science', year: '3rd Year', examsTaken: 17, avgScore: '92.5%', status: 'Active', lastActive: '3 days ago' },
-  { id: 's5', name: 'Sneha Patel', email: 'sneha.p@quentrix.edu', stream: 'Electronics & Comm.', year: '2nd Year', examsTaken: 13, avgScore: '86.2%', status: 'Active', lastActive: '5 hours ago' },
-  { id: 's6', name: 'Rohan Kulkarni', email: 'rohan.k@quentrix.edu', stream: 'Computer Science', year: '3rd Year', examsTaken: 12, avgScore: '84.7%', status: 'Inactive', lastActive: '1 week ago' },
-  { id: 's7', name: 'Divya Reddy', email: 'divya.r@quentrix.edu', stream: 'Information Technology', year: '1st Year', examsTaken: 8, avgScore: '79.2%', status: 'Active', lastActive: 'Just now' },
-  { id: 's8', name: 'Tanmay Joshi', email: 'tanmay.j@quentrix.edu', stream: 'Mechanical Engineering', year: '4th Year', examsTaken: 10, avgScore: '80.5%', status: 'Active', lastActive: '4 days ago' }
-];
+export const MOCK_STUDENTS_LIST = [];
 
 export const MOCK_PERFORMANCE_ANALYTICS = {
-  overallScore: 84.5,
-  totalExams: 14,
-  totalQuestionsAttempted: 350,
-  accuracyRate: 86.8,
-  averageTimePerQuestion: '1m 24s',
-  topicBreakdown: [
-    { subject: 'Data Structures', topic: 'Arrays', accuracy: 85, attempted: 40, correct: 34, status: 'Strong' },
-    { subject: 'Data Structures', topic: 'Linked Lists', accuracy: 60, attempted: 30, correct: 18, status: 'Moderate' },
-    { subject: 'Data Structures', topic: 'Trees', accuracy: 40, attempted: 35, correct: 14, status: 'Weak' },
-    { subject: 'Data Structures', topic: 'Graphs', accuracy: 75, attempted: 28, correct: 21, status: 'Strong' },
-    { subject: 'Algorithms', topic: 'Dynamic Programming', accuracy: 52, attempted: 25, correct: 13, status: 'Weak' },
-    { subject: 'Operating Systems', topic: 'Process Scheduling', accuracy: 92, attempted: 30, correct: 28, status: 'Strong' },
-    { subject: 'Operating Systems', topic: 'Deadlocks', accuracy: 68, attempted: 22, correct: 15, status: 'Moderate' },
-    { subject: 'DBMS', topic: 'SQL & Normalization', accuracy: 88, attempted: 45, correct: 40, status: 'Strong' }
-  ],
+  overallScore: 0,
+  totalExams: 0,
+  totalQuestionsAttempted: 0,
+  accuracyRate: 0,
+  averageTimePerQuestion: '0m 00s',
+  topicBreakdown: [],
   subjectMastery: [
-    { subject: 'Data Structures', mastery: 72, color: '#D87855' },
-    { subject: 'Algorithms', mastery: 65, color: '#B8D58B' },
-    { subject: 'Operating Systems', mastery: 84, color: '#E8C58D' },
-    { subject: 'Database Management', mastery: 90, color: '#82769D' },
-    { subject: 'Computer Networks', mastery: 78, color: '#79B8FF' }
+    { subject: 'Data Structures', mastery: 0, color: '#D87855' },
+    { subject: 'Algorithms', mastery: 0, color: '#B8D58B' },
+    { subject: 'Operating Systems', mastery: 0, color: '#E8C58D' },
+    { subject: 'Database Management', mastery: 0, color: '#82769D' },
+    { subject: 'Computer Networks', mastery: 0, color: '#79B8FF' }
   ],
-  scoreHistory: [
-    { exam: 'Quiz 1', score: 68, avg: 62 },
-    { exam: 'Midterm A', score: 74, avg: 65 },
-    { exam: 'Quiz 2', score: 82, avg: 70 },
-    { exam: 'Lab Exam', score: 88, avg: 72 },
-    { exam: 'Assessment 3', score: 85, avg: 74 },
-    { exam: 'Final Practice', score: 92, avg: 76 }
-  ],
+  scoreHistory: [],
   aiDiagnosticInsights: {
-    strengthsSummary: 'Outstanding grasp of memory address arithmetic, SQL joins/normal forms, and operating system scheduling algorithms.',
-    criticalGaps: 'Binary search tree rotations (AVL balance factors) and overlapping subproblem formulation in Dynamic Programming need targeted practice.',
+    strengthsSummary: 'Complete your first examination to generate personalized diagnostic intelligence.',
+    criticalGaps: 'No evaluation gaps identified yet.',
     recommendedActions: [
-      'Solve 15 Tree recursion problems focused on height balance & lowest common ancestors.',
-      'Review memoization vs tabulation tables for 0/1 Knapsack variations.',
-      'Take a 20-minute timed AI Mock Test on Trees & Heaps to build quick-recognition patterns.'
+      'Take a scheduled examination or practice test to begin building your skill profile.'
     ],
-    predictedExamScore: '87 - 91%'
+    predictedExamScore: 'N/A'
   }
 };
 

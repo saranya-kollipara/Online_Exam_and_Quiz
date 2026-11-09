@@ -5,23 +5,14 @@ import { storage } from '../utils/storage';
 const EXAMS_KEY = 'exams_list';
 
 function initializeExams() {
-  const stored = storage.get(EXAMS_KEY);
-  if (!stored || !Array.isArray(stored) || stored.length === 0) {
-    storage.set(EXAMS_KEY, MOCK_EXAMS);
-    return MOCK_EXAMS;
+  const stored = storage.get(EXAMS_KEY) || [];
+  // Purge any legacy sample exams that were previously seeded
+  const sampleExamIds = new Set(['exam_cs_301', 'exam_cs_302', 'exam_cs_303', 'exam_cs_304', 'exam_cs_305']);
+  const cleaned = stored.filter((e) => e && e.id && !sampleExamIds.has(e.id));
+  if (cleaned.length !== stored.length) {
+    storage.set(EXAMS_KEY, cleaned);
   }
-  let modified = false;
-  const merged = [...stored];
-  for (const m of MOCK_EXAMS) {
-    if (!merged.some((e) => e && e.id === m.id)) {
-      merged.push(m);
-      modified = true;
-    }
-  }
-  if (modified) {
-    storage.set(EXAMS_KEY, merged);
-  }
-  return merged;
+  return cleaned;
 }
 
 export const examService = {

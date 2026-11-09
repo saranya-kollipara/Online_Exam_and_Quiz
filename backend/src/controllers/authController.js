@@ -94,7 +94,7 @@ export const authController = {
       });
 
       if (!user) {
-        return errorResponse(res, 'Invalid email address or password.', 401);
+        return errorResponse(res, 'No account found with this email address. Sign up to continue.', 404);
       }
 
       if (!user.isActive) {
@@ -104,7 +104,7 @@ export const authController = {
       // Verify bcrypt password
       const isMatch = await bcrypt.compare(password, user.password);
       if (!isMatch) {
-        return errorResponse(res, 'Invalid email address or password.', 401);
+        return errorResponse(res, 'Invalid password. Please check your credentials.', 401);
       }
 
       const token = generateToken({

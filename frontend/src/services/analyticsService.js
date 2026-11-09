@@ -6,7 +6,7 @@ const REGISTERED_STUDENTS_KEY = 'registered_students';
 const RECENT_ACTIVITY_KEY = 'admin_recent_activity';
 
 export const analyticsService = {
-  getStudentAnalytics: async (studentId = 'user_student_01') => {
+  getStudentAnalytics: async (studentId = null) => {
     try {
       const res = await api.get('/analytics/student');
       if (res?.data) {
@@ -46,15 +46,12 @@ export const analyticsService = {
     const customActivities = storage.get(RECENT_ACTIVITY_KEY) || [];
 
     const defaultActivities = [
-      { id: 1, user: 'Aditya Vardhan', action: 'Completed Data Structures Mid-Term', time: '12 mins ago', score: '90%' },
-      { id: 2, user: 'Dr. Aris Thorne', action: 'Generated AI Questions for Examination', time: '45 mins ago', score: '-' },
-      { id: 3, user: 'Ananya Sharma', action: 'Submitted Two Sum C++ Solution', time: '1 hour ago', score: '100%' },
-      { id: 4, user: 'System', action: 'Automated Plagiarism & Anomaly Scan', time: '2 hours ago', score: 'Clean' }
+      { id: 1, user: 'System', action: 'Assessment Engine & Academic Platform Initialized', time: 'Just now', score: 'Active' }
     ];
 
     const mergedActivities = [...customActivities, ...(apiData?.recentActivity || defaultActivities)].slice(0, 10);
 
-    const baseStudentCount = apiData?.totalStudents != null ? apiData.totalStudents : 1480;
+    const baseStudentCount = apiData?.totalStudents != null ? apiData.totalStudents : 0;
     const totalStudents = baseStudentCount + localRegistered.length;
 
     return {

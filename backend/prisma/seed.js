@@ -163,28 +163,7 @@ async function main() {
     }
   });
 
-  // 6. Create Student User
-  console.log('Creating Student User...');
-  const studentUser = await prisma.user.create({
-    data: {
-      email: 'student@quentrix.ai',
-      password: hashedPassword,
-      role: 'STUDENT',
-      firstName: 'Aditya',
-      lastName: 'Vardhan',
-      avatarUrl: 'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?auto=format&fit=crop&w=250&q=80',
-      studentProfile: {
-        create: {
-          rollNumber: '22CS8042',
-          institution: 'Indian Institute of Engineering & Technology',
-          yearOfStudy: '3rd Year (Semester 6)',
-          streamId: cseStream.id
-        }
-      }
-    }
-  });
-
-  // 7. Create Questions with Options
+  // 6. Create Questions with Options for the Academic Question Bank
   console.log('Seeding Question Bank Repository...');
   const questionItems = [
     {
@@ -310,9 +289,8 @@ async function main() {
     }
   ];
 
-  const createdQuestions = [];
   for (const q of questionItems) {
-    const question = await prisma.question.create({
+    await prisma.question.create({
       data: {
         text: q.text,
         type: q.type,
@@ -323,7 +301,7 @@ async function main() {
         contentHash: generateContentHash(q.text),
         normalizedText: normalizeText(q.text),
         isApproved: true,
-        timesUsed: 14,
+        timesUsed: 0,
         streamId: q.streamId,
         subjectId: q.subjectId,
         topicId: q.topicId,
@@ -338,171 +316,10 @@ async function main() {
         }
       }
     });
-    createdQuestions.push(question);
   }
 
-  // 8. Create Active Mid-Term Exam
-  console.log('Creating Official Examinations...');
-  const activeExam = await prisma.exam.create({
-    data: {
-      title: 'Data Structures & Algorithms Comprehensive Mid-Term',
-      description: 'Formal academic midterm covering non-linear data structures, binary search trees, and graph traversals.',
-      streamId: cseStream.id,
-      subjectId: dsSubject.id,
-      topicName: 'Trees, Arrays & Linked Lists',
-      durationMinutes: 45,
-      totalMarks: 50.0,
-      passMarks: 20.0,
-      negativeMarking: true,
-      negativeMarks: 0.5,
-      difficulty: 'MEDIUM',
-      questionType: 'MIXED',
-      status: 'ACTIVE',
-      startDate: new Date(Date.now() - 2 * 86400000),
-      endDate: new Date(Date.now() + 10 * 86400000),
-      maxAttempts: 1,
-      shuffleQuestions: true,
-      shuffleOptions: true,
-      createdById: adminUser.id,
-      examQuestions: {
-        create: createdQuestions.map((q, idx) => ({
-          questionId: q.id,
-          orderNumber: idx + 1,
-          marks: q.defaultMarks,
-          negativeMarks: q.negativeMarks
-        }))
-      }
-    }
-  });
-
-  // Upcoming Exam
-  await prisma.exam.create({
-    data: {
-      title: 'Operating Systems Concurrency & Deadlocks Assessment',
-      description: "Evaluates mastery over Banker's Algorithm, semaphores, mutex locks, and virtual memory paging.",
-      streamId: cseStream.id,
-      subjectId: osSubject.id,
-      topicName: 'Deadlocks & Process Synchronization',
-      durationMinutes: 60,
-      totalMarks: 60.0,
-      passMarks: 24.0,
-      negativeMarking: true,
-      negativeMarks: 0.5,
-      difficulty: 'HARD',
-      questionType: 'MCQ',
-      status: 'SCHEDULED',
-      startDate: new Date(Date.now() + 5 * 86400000),
-      endDate: new Date(Date.now() + 8 * 86400000),
-      maxAttempts: 1,
-      createdById: adminUser.id
-    }
-  });
-
-  // Completed Exam with student result
-  const completedExam = await prisma.exam.create({
-    data: {
-      title: 'Database Systems & SQL Optimization Final Quiz',
-      description: 'Core evaluation on 1NF through BCNF normalization, ACID properties, and B+ tree indexing.',
-      streamId: cseStream.id,
-      subjectId: dbmsSubject.id,
-      topicName: 'Normalization & Transactions',
-      durationMinutes: 40,
-      totalMarks: 40.0,
-      passMarks: 16.0,
-      negativeMarking: false,
-      negativeMarks: 0.0,
-      difficulty: 'EASY',
-      questionType: 'MCQ',
-      status: 'COMPLETED',
-      startDate: new Date(Date.now() - 20 * 86400000),
-      endDate: new Date(Date.now() - 18 * 86400000),
-      maxAttempts: 2,
-      createdById: adminUser.id
-    }
-  });
-
-  // Create Completed Attempt & Result
-  const attempt = await prisma.examAttempt.create({
-    data: {
-      examId: completedExam.id,
-      userId: studentUser.id,
-      attemptNumber: 1,
-      status: 'SUBMITTED',
-      startedAt: new Date(Date.now() - 19 * 86400000),
-      expiresAt: new Date(Date.now() - 19 * 86400000 + 40 * 60000),
-      submittedAt: new Date(Date.now() - 19 * 86400000 + 28 * 60000)
-    }
-  });
-
-  await prisma.result.create({
-    data: {
-      attemptId: attempt.id,
-      examId: completedExam.id,
-      userId: studentUser.id,
-      totalQuestions: 20,
-      correctAnswers: 18,
-      incorrectAnswers: 2,
-      unansweredCount: 0,
-      totalMarks: 40.0,
-      obtainedMarks: 36.0,
-      percentage: 90.0,
-      isPassed: true,
-      timeTakenSeconds: 28 * 60,
-      topicAccuracy: {
-        'Normalization': 92,
-        'Transactions': 88
-      },
-      aiAnalysis: {
-        overallAccuracy: '90.0%',
-        speedRating: 'Fast & Decisive',
-        strongArea: 'Relational Decomposition & Normal Forms',
-        focusArea: 'Review isolation anomalies under Repeatable Read.',
-        percentile: 96
-      }
-    }
-  });
-
-  // 9. Create Leaderboard Entries
-  console.log('Seeding Leaderboard Roster...');
-  const peers = [
-    { name: 'Siddharth Rao', email: 'siddharth.r@quentrix.ai', score: 890, avg: 96.4, rank: 1, tier: 'Diamond Master' },
-    { name: 'Ananya Sharma', email: 'ananya.s@quentrix.ai', score: 865, avg: 94.8, rank: 2, tier: 'Diamond Master' },
-    { name: 'Vikramaditya Bose', email: 'vikram.b@quentrix.ai', score: 840, avg: 92.5, rank: 3, tier: 'Platinum Pro' },
-    { name: 'Aditya Vardhan', email: 'student@quentrix.ai', score: 785, avg: 88.6, rank: 4, tier: 'Code Grandmaster' }
-  ];
-
-  for (const p of peers) {
-    let u = (p.email === studentUser.email) ? studentUser : await prisma.user.create({
-      data: {
-        email: p.email,
-        password: hashedPassword,
-        role: 'STUDENT',
-        firstName: p.name.split(' ')[0],
-        lastName: p.name.split(' ')[1] || 'Scholar',
-        studentProfile: {
-          create: {
-            institution: 'Indian Institute of Engineering & Technology',
-            yearOfStudy: '3rd Year',
-            streamId: cseStream.id
-          }
-        }
-      }
-    });
-
-    await prisma.leaderboardEntry.create({
-      data: {
-        userId: u.id,
-        streamId: cseStream.id,
-        rank: p.rank,
-        totalScore: p.score,
-        examsCount: 14,
-        avgPercentage: p.avg,
-        honorTier: p.tier
-      }
-    });
-  }
-
-  console.log('Quentrix AI Database successfully seeded with 9 streams, academic subjects, question bank, active exam, and peer roster!');
+  console.log('Quentrix AI Database successfully initialized with 9 streams, academic subjects, question bank repository, and secure Admin profile. No sample exams or students seeded.');
+}
 }
 
 main()
